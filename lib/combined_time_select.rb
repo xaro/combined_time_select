@@ -51,23 +51,14 @@ module ActionView::Helpers
           build_hidden(:minute, val)
         else
           minute_options = []
-          start_minute.upto(end_minute) do |minute|
-            if minute%minute_interval == 0
-              ampm = minute < 720 ? ' AM' : ' PM'
-              hour = minute/60
-              minute_padded = zero_pad_num(minute%60)
-              hour_padded = zero_pad_num(hour)
-              ampm_hour = ampm_hour(hour)
 
-              val = "#{hour_padded}:#{minute_padded}:00"
-
-              option_text = @options[:ampm] ? "#{ampm_hour}:#{minute_padded}#{ampm}" : "#{hour_padded}:#{minute_padded}"
-              minute_options << ((val_minutes == minute) ?
-                %(<option value="#{val}" selected="selected">#{option_text}</option>\n) :
-                %(<option value="#{val}">#{option_text}</option>\n)
-              )
-            end
+          if start_minute > end_minute
+            create_options(start_minute, 1439, minute_interval, val_minutes, minute_options)
+            create_options(0, end_minute, minute_interval, val_minutes, minute_options)
+          else
+            create_options(start_minute, end_minute, minute_interval, val_minutes, minute_options)
           end
+
           build_select(:minute, minute_options.join(' '))
         end
       end
@@ -109,6 +100,27 @@ module ActionView::Helpers
       end
       alias_method_chain :select_day, :simple_time_select
 
+    private
+    def create_options(start_minute, end_minute, minute_interval, val_minutes, minute_options)
+      start_minute.upto(end_minute) do |minute|
+        if minute%minute_interval == 0
+          ampm = minute < 720 ? ' AM' : ' PM'
+          hour = minute/60
+          minute_padded = zero_pad_num(minute%60)
+          hour_padded = zero_pad_num(hour)
+          ampm_hour = ampm_hour(hour)
+
+          val = "#{hour_padded}:#{minute_padded}:00"
+
+          option_text = @options[:ampm] ? "#{ampm_hour}:#{minute_padded}#{ampm}" : "#{hour_padded}:#{minute_padded}"
+          minute_options << ((val_minutes == minute) ?
+            %(<option value="#{val}" selected="selected">#{option_text}</option>\n) :
+            %(<option value="#{val}">#{option_text}</option>\n)
+          )
+        end
+      end
+      minute_options
+    end
   end
 end
 
